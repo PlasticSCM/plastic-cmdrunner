@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Diagnostics;
 
 
@@ -7,180 +8,6 @@ namespace Codice.CmdRunner
 {
     internal class CodiceCmdRunner : BaseCmdRunner
     {
-        private const int DEFAULT_SPIN_TIME = 10 * 1000;
-        private const int DEFAULT_MAX_WAIT_TIME = 8 * 60 * 1000;
-        private const int DEFAULT_MAX_WAIT_TIME_ALL = 30 * 60 * 1000;
-
-        private int mSpinTime = -1;
-        private int mMaxWaitTime = -1;
-        private int mMaxWaitTimeAll = -1;
-
-        private bool mbTimeOut = true;
-
-        protected bool USE_FILE_COMMUNICATION = true; // communicate with cm shell using a file
-
-        private static string COMMAND_RESULT = "CommandResult";
-
-        delegate string ReadAsync(StreamReader reader);
-        
-        private int GetSpinTime()
-        {
-            if (mSpinTime != -1) return mSpinTime;
-
-            mSpinTime = DEFAULT_SPIN_TIME;
-
-            return mSpinTime;
-        }
-        
-        private int GetMaxWaitTime()
-        {
-            if (mMaxWaitTime != -1) return mMaxWaitTime;
-
-            mMaxWaitTime = DEFAULT_MAX_WAIT_TIME;
-
-            return mMaxWaitTime;
-        }
-
-        private int GetMaxWaitTimeAll()
-        {
-            if (mMaxWaitTimeAll != -1) return mMaxWaitTimeAll;
-
-            mMaxWaitTimeAll = DEFAULT_MAX_WAIT_TIME_ALL;
-
-            return mMaxWaitTimeAll;
-        }
-        
-        protected string ReadALine(StreamReader reader)
-        {
-            return reader.ReadLine();
-        }
-
-        internal void DontTimeout()
-        {
-            mbTimeOut = false;
-        }
-
-        internal void WorkWithoutFileCommunication()
-        {
-            USE_FILE_COMMUNICATION = false;
-        }
-
-        internal override int RunAndWait(
-            string cmd, string workingdir, out string output, out string error)
-        {
-            return RunAndWait(cmd, workingdir, out output, out error, true);
-        }
-
-        internal override int RunAndWait(
-            string cmd, string workingdir, out string output, out string error, bool bShell)
-        {
-            if (!bShell || !cmd.StartsWith("cm"))
-            {
-                return base.RunAndWait(cmd, workingdir, out output, out error);
-            }
-
-            workingdir = Path.GetFullPath(workingdir);
-            if (mCmdProc == null)
-            {
-                mCmdProc = InitCmdProc(workingdir);
-            }
-
-            string command = cmd.Substring(3);
-            string outputfile = string.Empty;
-
-            if (USE_FILE_COMMUNICATION)
-            {
-                outputfile = Path.GetTempFileName();
-
-                if (File.Exists(outputfile))
-                    File.Delete(outputfile);
-
-                string cmdText = string.Format(
-                    "{0} -path=\"{1}\" --shelloutputfile=\"{2}\" --stack",
-                    command, workingdir, outputfile);
-
-                mCmdProc.StandardInput.WriteLine(cmdText);
-            }
-            else
-            {
-                string cmdText = string.Format("{0} -path=\"{1}\"",
-                    command, workingdir);
-
-                mCmdProc.StandardInput.WriteLine(cmdText);
-            }
-
-            output = "";
-            int result = 0;
-
-            if (USE_FILE_COMMUNICATION)
-                if (IsWindows())
-                    result = ReadFileOutputWindows(mCmdProc, outputfile,
-                        out output, out error);
-                else
-                    result = ReadFileOutputUnix(mCmdProc, outputfile,
-                        out output, out error);
-            else
-                result = ReadStdOutput(mCmdProc, out output, out error);
-
-            return result;
-        }
-
-        internal static bool IsWindows()
-        {
-            switch (Environment.OSVersion.Platform)
-            {
-                case PlatformID.Win32Windows:
-                case PlatformID.Win32NT:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        private bool TryToOpenFile(string filename, ref StreamReader streamReader)
-        {
-            if (!File.Exists(filename))
-                return false;
-
-            try
-            {
-                streamReader = new StreamReader(filename);
-                streamReader.Peek();
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        private bool ReadFileContent(string filename, ref string output)
-        {
-            if (!File.Exists(filename))
-                return false;
-
-            StreamReader streamReader = null;
-
-            try
-            {
-                streamReader = new StreamReader(filename);
-                output = streamReader.ReadToEnd();
-                if (output.IndexOf(COMMAND_RESULT) >= 0)
-                    return true;
-                else
-                    return false;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-            finally
-            {
-                if (streamReader != null)
-                    streamReader.Close();
-            }
-        }
-
         protected int ReadFileOutputUnix(
             Process proc,
             string outputfile,
@@ -188,14 +15,12 @@ namespace Codice.CmdRunner
             out string error)
         {
             bool bDone = false;
-
             int result = 1;
 
             output = string.Empty;
             error = string.Empty;
 
             StreamReader sreader = null;
-
             try
             {
                 while (!bDone)
@@ -221,7 +46,8 @@ namespace Codice.CmdRunner
 
                     bDone = true;
 
-                    string commandResultStr = output.Substring(output.IndexOf(COMMAND_RESULT) + COMMAND_RESULT.Length + 1);
+                    string commandResultStr = output.Substring(
+                        output.IndexOf(COMMAND_RESULT) + COMMAND_RESULT.Length + 1);
 
                     result = Convert.ToInt32(commandResultStr);
                     output = output.Substring(0, output.IndexOf(COMMAND_RESULT));
@@ -238,11 +64,10 @@ namespace Codice.CmdRunner
             return result;
         }
 
-        protected int ReadFileOutputWindows(
-            Process proc, string outputfile, out string output, out string error)
+        protected int ReadFileOutputWindows(Process proc, string outputfile, out string output,
+            out string error)
         {
             bool bDone = false;
-
             int result = 1;
 
             output = string.Empty;
@@ -301,7 +126,6 @@ namespace Codice.CmdRunner
         protected int ReadStdOutput(Process proc, out string output, out string error)
         {
             ReadAsync reader = new ReadAsync(ReadALine);
-
             bool bDone = false;
 
             output = string.Empty;
@@ -337,20 +161,14 @@ namespace Codice.CmdRunner
                 }
                 else
                     output += line + "\n";
-
             }
             return result;
         }
 
-        protected int RunWait(
-            Process proc,
-            int initWait,
-            ref int lastElapsed,
-            ref double totSeconds,
-            out string error)
+        protected int RunWait(Process proc, int initWait, ref int lastElapsed,
+            ref double totSeconds, out string error)
         {
-            System.Threading.Thread.Sleep(10);
-
+            Thread.Sleep(10);
             error = string.Empty;
 
             if (!mbTimeOut)
@@ -375,7 +193,7 @@ namespace Codice.CmdRunner
                 {
                     // try to move the input something
                     WriteLine("Sending an enter to move things a little bit");
-                    proc.StandardInput.WriteLine("");
+                    proc.StandardInput.WriteLine(string.Empty);
                 }
             }
 
@@ -405,10 +223,156 @@ namespace Codice.CmdRunner
             return 0;
         }
 
+        protected string ReadALine(StreamReader reader)
+        {
+            return reader.ReadLine();
+        }
+
+        internal void DontTimeout()
+        {
+            mbTimeOut = false;
+        }
+
+        internal void WorkWithoutFileCommunication()
+        {
+            USE_FILE_COMMUNICATION = false;
+        }
+
+        internal override int RunAndWait(string cmd, string workingdir, out string output,
+            out string error)
+        {
+            return RunAndWait(cmd, workingdir, out output, out error, true);
+        }
+
+        internal override int RunAndWait(string cmd, string workingdir, out string output,
+            out string error, bool bShell)
+        {
+            if (!bShell || !cmd.StartsWith("cm"))
+            {
+                return base.RunAndWait(cmd, workingdir, out output, out error);
+            }
+
+            workingdir = Path.GetFullPath(workingdir);
+            if (mCmdProc == null)
+            {
+                mCmdProc = InitCmdProc(workingdir);
+            }
+
+            string command = cmd.Substring(3);
+            string outputfile = string.Empty;
+
+            if (USE_FILE_COMMUNICATION)
+            {
+                outputfile = Path.GetTempFileName();
+
+                if (File.Exists(outputfile))
+                    File.Delete(outputfile);
+
+                string cmdText = string.Format(
+                    "{0} -path=\"{1}\" --shelloutputfile=\"{2}\" --stack",
+                    command, workingdir, outputfile);
+
+                mCmdProc.StandardInput.WriteLine(cmdText);
+            }
+            else
+            {
+                string cmdText = string.Format("{0} -path=\"{1}\"",
+                    command, workingdir);
+
+                mCmdProc.StandardInput.WriteLine(cmdText);
+            }
+
+            output = string.Empty;
+            int result = 0;
+
+            if (USE_FILE_COMMUNICATION)
+                if (PlatformIdentifier.IsWindows())
+                    result = ReadFileOutputWindows(mCmdProc, outputfile,
+                        out output, out error);
+                else
+                    result = ReadFileOutputUnix(mCmdProc, outputfile,
+                        out output, out error);
+            else
+                result = ReadStdOutput(mCmdProc, out output, out error);
+
+            return result;
+        }
+
+        private int GetSpinTime()
+        {
+            if (mSpinTime != -1) return mSpinTime;
+
+            mSpinTime = DEFAULT_SPIN_TIME;
+
+            return mSpinTime;
+        }
+
+        private int GetMaxWaitTime()
+        {
+            if (mMaxWaitTime != -1) return mMaxWaitTime;
+
+            mMaxWaitTime = DEFAULT_MAX_WAIT_TIME;
+
+            return mMaxWaitTime;
+        }
+
+        private int GetMaxWaitTimeAll()
+        {
+            if (mMaxWaitTimeAll != -1) return mMaxWaitTimeAll;
+
+            mMaxWaitTimeAll = DEFAULT_MAX_WAIT_TIME_ALL;
+
+            return mMaxWaitTimeAll;
+        }
+
+        private bool TryToOpenFile(string filename, ref StreamReader streamReader)
+        {
+            if (!File.Exists(filename))
+                return false;
+
+            try
+            {
+                streamReader = new StreamReader(filename);
+                streamReader.Peek();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private bool ReadFileContent(string filename, ref string output)
+        {
+            if (!File.Exists(filename))
+                return false;
+
+            StreamReader streamReader = null;
+            try
+            {
+                streamReader = new StreamReader(filename);
+                output = streamReader.ReadToEnd();
+                if (output.IndexOf(COMMAND_RESULT) >= 0)
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                if (streamReader != null)
+                    streamReader.Close();
+            }
+        }
+
         private Process InitCmdProc(string workingdir)
         {
             string shellcmd = LaunchCommand.Get().GetCmShellCommand();
-            shellcmd = shellcmd.Replace("[GENDATESTAMP]", DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss"));
+            shellcmd = shellcmd.Replace("[GENDATESTAMP]", DateTime.Now.ToString(
+                "yyyy-MM-dd-hh-mm-ss"));
 
             string cpath = LaunchCommand.Get().GetClientPath();
             if (cpath != string.Empty)
@@ -429,5 +393,21 @@ namespace Codice.CmdRunner
 
             return result;
         }
+
+        protected bool USE_FILE_COMMUNICATION = true; // communicate with cm shell using a file
+
+        private const int DEFAULT_SPIN_TIME = 10 * 1000;
+        private const int DEFAULT_MAX_WAIT_TIME = 8 * 60 * 1000;
+        private const int DEFAULT_MAX_WAIT_TIME_ALL = 30 * 60 * 1000;
+
+        private int mSpinTime = -1;
+        private int mMaxWaitTime = -1;
+        private int mMaxWaitTimeAll = -1;
+
+        private bool mbTimeOut = true;
+
+        private static string COMMAND_RESULT = "CommandResult";
+
+        delegate string ReadAsync(StreamReader reader);
     }
 }

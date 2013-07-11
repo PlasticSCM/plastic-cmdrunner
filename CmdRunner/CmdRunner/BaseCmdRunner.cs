@@ -12,12 +12,65 @@ namespace Codice.CmdRunner
 
     internal class BaseCmdRunner
     {
-        private Hashtable mEnvironmentVariables = null;
-        private static IConsoleWriter mConsoleWriter = null;
-
         public void InitConsole(IConsoleWriter writer)
         {
             mConsoleWriter = writer;
+        }
+
+        public int InternalExecuteCommand(string command, string path)
+        {
+            WriteCommand(path, command);
+
+            try
+            {
+                int result = RunAndWait(command, path);
+
+                ProcessCommandResult(command, result);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                return ManageException(command, path, e);
+            }
+        }
+
+        public int InternalExecuteCommand(
+            string command, string path, string input, out string output, out string error,
+            bool bUseCmShell)
+        {
+            output = string.Empty;
+            error = string.Empty;
+
+            WriteCommand(path, command);
+            try
+            {
+                int result;
+
+                if (input != null)
+                {
+                    result = RunAndWaitWithInput(command, path, input, out output, out error);
+                }
+                else
+                {
+                    result = RunAndWait(command, path, out output, out error, bUseCmShell);
+                }
+
+                WriteLine(output);
+
+                if (result != 0)
+                {
+                    WriteLine(error);
+                }
+
+                ProcessCommandResult(command, result);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                return ManageException(command, path, e);
+            }
         }
 
         protected void WriteLine(string s)
@@ -28,30 +81,19 @@ namespace Codice.CmdRunner
             mConsoleWriter.WriteLine(s);
         }
 
-        internal Process mCmdProc = null;
-
-        private bool IsWindows()
+        protected double GetTotalProcessorTime(Process proc)
         {
-            switch (Environment.OSVersion.Platform)
+            try
             {
-                case PlatformID.Win32Windows:
-                case PlatformID.Win32NT:
-                    return true;
-                default:
-                    return false;
+                return proc.TotalProcessorTime.TotalSeconds;
+            }
+            catch
+            {
+                return -1;
             }
         }
 
-        private string EscapeArgs(string args)
-        {
-            if (IsWindows())
-                return args;
-            else
-                return args.Replace("#", "\\#");
-        }
-
-        internal Process InternalRun(
-            string cmd, string workingdir, bool bRedirectStreams)
+        internal Process InternalRun(string cmd, string workingdir, bool bRedirectStreams)
         {
             Process p = new Process();
             string[] args = cmd.Split(' ');
@@ -82,24 +124,22 @@ namespace Codice.CmdRunner
             mEnvironmentVariables = variables;
         }
 
-        internal virtual int RunAndWait(string cmd, string workingdir,
-            out string output, out string error, bool bUseCmShell)
+        internal virtual int RunAndWait(string cmd, string workingdir, out string output,
+            out string error, bool bUseCmShell)
         {
             return RunAndWaitWithInput(cmd, workingdir, null, out output, out error);
         }
 
-        internal virtual int RunAndWait(string cmd, string workingdir,
-            out string output, out string error)
+        internal virtual int RunAndWait(string cmd, string workingdir, out string output,
+            out string error)
         {
             return RunAndWaitWithInput(cmd, workingdir, null, out output, out error);
         }
 
-        internal virtual int RunAndWaitWithInput(
-            string cmd, string workingdir, string input,
+        internal virtual int RunAndWaitWithInput(string cmd, string workingdir, string input,
             out string output, out string error)
         {
             Process p = InternalRun(cmd, workingdir, true);
-
             try
             {
                 if (input != null && input != string.Empty)
@@ -143,79 +183,33 @@ namespace Codice.CmdRunner
             }
         }
 
-        protected double GetTotalProcessorTime(Process proc)
+        private bool IsWindows()
         {
-            try
+            switch (Environment.OSVersion.Platform)
             {
-                return proc.TotalProcessorTime.TotalSeconds;
+                case PlatformID.Win32Windows:
+                case PlatformID.Win32NT:
+                    return true;
+                default:
+                    return false;
             }
-            catch
-            {
-                return -1;
-            }
+        }
+
+        private string EscapeArgs(string args)
+        {
+            if (IsWindows())
+                return args;
+            else
+                return args.Replace("#", "\\#");
         }
 
         private int ManageException(string command, string path, Exception e)
         {
-            string errormsg = string.Format(
-                "Error executing command {0} on path {1}. Error = {2}",
+            string errormsg = string.Format("Error executing command {0} on path {1}. Error = {2}",
                 command, path, e.Message + e.StackTrace);
             WriteLine(errormsg);
 
             return 1;
-        }
-
-        public int InternalExecuteCommand(
-            string command, string path, string input,
-            out string output, out string error, bool bUseCmShell)
-        {
-            output = string.Empty;
-            error = string.Empty;
-
-            WriteCommand(path, command);
-            try
-            {
-                int result;
-
-                if (input != null)
-                    result = RunAndWaitWithInput(
-                        command, path, input, out output, out error);
-                else
-                    result = RunAndWait(command, path, out output, out error, bUseCmShell);
-
-                WriteLine(output);
-
-                if (result != 0)
-                {
-                    WriteLine(error);
-                }
-
-                ProcessCommandResult(command, result);
-
-                return result;
-            }
-            catch (Exception e)
-            {
-                return ManageException(command, path, e);
-            }
-        }
-
-        public int InternalExecuteCommand(string command, string path)
-        {
-            WriteCommand(path, command);
-
-            try
-            {
-                int result = RunAndWait(command, path);
-
-                ProcessCommandResult(command, result);
-
-                return result;
-            }
-            catch (Exception e)
-            {
-                return ManageException(command, path, e);
-            }
         }
 
         private void WriteCommand(string path, string command)
@@ -230,9 +224,11 @@ namespace Codice.CmdRunner
             if (result == 0)
                 return;
 
-            WriteLine(
-                string.Format("Command {0} failed with error code {1}",
-                command, result));
+            WriteLine(string.Format("Command {0} failed with error code {1}", command, result));
         }
+
+        private Hashtable mEnvironmentVariables = null;
+        private static IConsoleWriter mConsoleWriter = null;
+        internal Process mCmdProc = null;
     }
 }

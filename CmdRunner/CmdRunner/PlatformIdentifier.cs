@@ -4,8 +4,6 @@ namespace Codice.CmdRunner
 {
     public class PlatformIdentifier
     {
-        private static bool bIsWindowsInitialized = false;
-        private static bool bIsWindows = false;
         public static bool IsWindows()
         {
             if (!bIsWindowsInitialized)
@@ -22,8 +20,6 @@ namespace Codice.CmdRunner
             return bIsWindows;
         }
 
-        private static bool bIsMacInitialized = false;
-        private static bool bIsMac = false;
         public static bool IsMac()
         {
             if (!bIsMacInitialized)
@@ -55,8 +51,8 @@ namespace Codice.CmdRunner
 
                             // Darwin tiger is 8, darwin leopard is 9,
                             // darwin snow leopard is 10
-                            // DAVE: this is not very nice, as it may conflict
-                            // on other OS like solaris or aix.
+                            // This is not very nice, as it may conflict
+                            // on other OS like Solaris or AIX.
                             bIsMac = (major == 8 || major == 9 || major == 10);
                         }
                     }
@@ -68,12 +64,17 @@ namespace Codice.CmdRunner
             return bIsMac;
         }
 
-
         private static bool IsRunningUnderMono()
         {
             Type t = Type.GetType("Mono.Runtime");
 
             return (t != null);
         }
+
+        private static bool bIsWindowsInitialized = false;
+        private static bool bIsWindows = false;
+
+        private static bool bIsMacInitialized = false;
+        private static bool bIsMac = false;
     }
 }
