@@ -15,6 +15,9 @@ namespace CmdRunnerExamples
             PrintCmBranches();
             PrintCmLabels();
             PrintCmRevisionsOnMainBranch();
+            MkWkCommand();
+            UpdateCommand();
+            SomeCommandsInShell();
 
             Console.ReadLine();
         }
@@ -75,6 +78,43 @@ namespace CmdRunnerExamples
             Console.WriteLine();
         }
 
+        private static void MkWkCommand()
+        {
+            int result = CmdRunner.ExecuteCommandWithResult(
+                String.Format("cm mkwk test {0}", Environment.CurrentDirectory),
+                Environment.CurrentDirectory);
+
+            Console.WriteLine(string.Format("The mkwk command executed with result: " + result));
+        }
+
+        private static void UpdateCommand()
+        {
+            int result = CmdRunner.ExecuteCommandWithResult(
+                String.Format("cm upd {0}", Environment.CurrentDirectory),
+                Environment.CurrentDirectory);
+            Console.WriteLine(string.Format("The update command finished with result: " + result));
+        }
+
+        private static void SomeCommandsInShell()
+        {
+            string repos = CmdRunner.ExecuteCommandWithStringResult(
+                "cm lrep",
+                Environment.CurrentDirectory, true);
+
+            /* TODO: more commands here!! */
+
+            string output;
+            string error;
+            CmdRunner.ExecuteCommandWithResult(
+                "cm rmwk .",
+                Environment.CurrentDirectory, out output, out error, true);
+
+            Console.WriteLine("The Plastic server has the following repositories: ");
+            PrintResult(repos);
+            Console.WriteLine(String.Format("The workspace was deleted. Output: {0}. Error: {1} ",
+                output, error));
+        }
+
         private static void PrintResult(string cmdResult)
         {
             ArrayList listResult = GetListResults(cmdResult, false);
@@ -97,7 +137,6 @@ namespace CmdRunnerExamples
                 if (sub.Equals("\r\n"))
                 {
                     cmdresult = cmdresult.Substring(0, cmdresult.Length - 2);
-
                 }
                 else
                 {
