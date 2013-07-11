@@ -14,6 +14,7 @@ The code consists of:
   
   Or within a shell context, such as:
   > cm shell
+
   > find branches
   
   The main different between both uses is that the cm shell is faster when running several commands in a row,
