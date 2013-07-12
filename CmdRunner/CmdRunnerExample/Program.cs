@@ -84,6 +84,9 @@ namespace CmdRunnerExamples
                 String.Format("cm mkwk test {0}", Environment.CurrentDirectory),
                 Environment.CurrentDirectory);
 
+            if (result > 0)
+                throw new Exception("Sorry, but I couldn't create a workspace. :(");
+
             Console.WriteLine(string.Format("The mkwk command executed with result: " + result));
         }
 
@@ -100,8 +103,6 @@ namespace CmdRunnerExamples
             string repos = CmdRunner.ExecuteCommandWithStringResult(
                 "cm lrep",
                 Environment.CurrentDirectory, true);
-
-            /* TODO: more commands here!! */
 
             string output;
             string error;
