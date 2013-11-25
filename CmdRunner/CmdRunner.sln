@@ -2,10 +2,22 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmdRunner", "CmdRunner\CmdRunner.csproj", "{78B48E02-E448-4C11-8E5F-28B20ECA2B04}"
+	GlobalSection(PlasticSccProperties) = preSolution
+		ControlledByPlastic = True
+		SccProvider = Plastic SCM
+	EndGlobalSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmdRunnerExample", "CmdRunnerExample\CmdRunnerExample.csproj", "{96343C99-F395-4C80-8E8D-AB03D96767FF}"
+	GlobalSection(PlasticSccProperties) = preSolution
+		ControlledByPlastic = True
+		SccProvider = Plastic SCM
+	EndGlobalSection
 EndProject
 Global
+	GlobalSection(PlasticSccProperties) = preSolution
+		ControlledByPlastic = True
+		SccProvider = Plastic SCM
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
