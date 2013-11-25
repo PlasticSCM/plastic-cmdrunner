@@ -14,9 +14,9 @@
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>Plastic SCM</SccProjectName>
-    <SccLocalPath>Plastic SCM</SccLocalPath>
-    <SccAuxPath>Plastic SCM</SccAuxPath>
+    <SccProjectName>PlasticSCM</SccProjectName>
+    <SccLocalPath>PlasticSCM</SccLocalPath>
+    <SccAuxPath>PlasticSCM</SccAuxPath>
     <SccProvider>Plastic SCM Source Control Service:{774e58ba-f1b9-40a7-b676-834fa2c220fe}</SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
