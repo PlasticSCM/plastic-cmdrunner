@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace sampleplasticapi
 {
-    class MainClass
+    class Program
     {
         public static void Main(string[] args)
         {
