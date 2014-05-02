@@ -9,20 +9,35 @@ namespace sampleplasticapi
     {
         public static void Main(string[] args)
         {
+            CliArgumentParser cli = new CliArgumentParser(args);
+            if(!cli.IsCorrect)
+            {
+                Console.WriteLine(USAGE);
+                Environment.ExitCode = WRONG_USAGE_CODE;
+                return;
+            }
+
             // The API is implemented to take advantage of the `cm shell' command
             // The first executed command will open a shell which will receive PlasticSCM commands 
             // This optimizes the execution since the CLI environment is initialized only once.
             try
             {
-                // Set up our work envirnoment -> repository + workspace
-                string workspaceDir = Path.Combine(Path.GetTempPath(), WORKSPACE_NAME);
-                if (!PlasticAPI.CreateRepository(REPOSITORY_NAME, out mError))
+                // Set up our work environment -> repository + workspace
+                if (!PlasticAPI.CreateRepository(cli.RepositoryName, out mError))
                     AbortProcess();
-                
+
+                string workspaceDir = Path.Combine(GetBasePath(cli), cli.WorkspaceName);
+
+                if(Directory.Exists(workspaceDir))
+                {
+                    mError = string.Format("Targeted workspace directory already exists: {0}", workspaceDir);
+                    AbortProcess();
+                }
+
                 Directory.CreateDirectory(workspaceDir);
                 PlasticAPI.WorkingDirectory = workspaceDir;
 
-                if(!PlasticAPI.CreateWorkspace(WORKSPACE_NAME, REPOSITORY_NAME, out mError))
+                if(!PlasticAPI.CreateWorkspace(cli.WorkspaceName, cli.RepositoryName, out mError))
                     AbortProcess();
 
                 // Add some initial contents
@@ -117,16 +132,23 @@ namespace sampleplasticapi
             catch (Exception e)
             {
                 Console.WriteLine(string.Format("ERROR: {0}", e.Message));
+                Environment.ExitCode = GENERIC_ERROR_CODE;
             }
             finally
             {
                 CmdRunner.TerminateShell();
             }
         }
-
         private static void AbortProcess()
         {
             throw new Exception(mError);
+        }
+
+        private static string GetBasePath(CliArgumentParser cli)
+        {
+            if (cli.HasOption(CliOptions.LocalArgument))
+                return Environment.CurrentDirectory;
+            return Path.GetTempPath();
         }
 
         private static void CheckIsItemCheckedOut(string path)
@@ -140,8 +162,8 @@ namespace sampleplasticapi
 
         private static string mError = string.Empty;
 
-        const string REPOSITORY_NAME = "my_repo";
-        const string WORKSPACE_NAME = "my_wk";
+        const int GENERIC_ERROR_CODE = 1;
+        const int WRONG_USAGE_CODE = 2;
 
         const string HELLO_WORLD_C =
 @"#include <stdio.h>
@@ -164,6 +186,40 @@ int my_function(char letter) {
 }
 ";
 
+        const string USAGE =
+@"Usage:
+  sampleplasticapi.exe <repository-name> <workspace-name> [options]
 
+Description:
+  This command will execute a set of PlasticSCM basic commands in order to
+  illustrate how to build an API taking advantage of how the CLI works.
+
+Requirements:
+  The local PlasticSCM CLI client (`cm') must be able to connect to a running
+  PlasticSCM server.
+
+Available options:
+  --local: Create the sample workspace under the current directory, instead
+           of under the temporary directory.
+
+Actions:
+  A new repository called <repository-name> will be created on the
+  PlasticSCM server that the client is linked to. A new workspace (called
+  <workspace-name>) pointing to that repository will be created under
+  the temporary directory. It can be created under the current directory
+  by using the '--local' parameter.
+
+  Once the PlasticSCM environment has been set up, this program will create
+  sample contents that will be uploaded into the repository. Some operations
+  will be performed on then, such as renaming, modifying and deleting a file,
+  or labelling a changeset.
+
+  We encourage you to review the repository contents after the execution
+  using the PlasticSCM graphic or command-line interface.
+
+Examples:
+  sampleplasticapi.exe my-repo my-workspace
+  sampleplasticapi.exe new-repo wkLocal --local
+";
     }
 }
