@@ -27,3 +27,7 @@ The code consists of:
   commands and get the result in different ways: get the string result, get the command result (0 means success,
   other value means error). In order to test this example you need to have the "cm.exe" in your path and
   configured with a Plastic server that must be running.
+
+* sampleplasticapi: A sample API for PlasticSCM built using CmdRunner. Many of the basic operations (add,
+  check-in, delete, etc.) are implemented. Also, a sample program to demonstrate the API usage is shipped
+  along with the actual API code.
