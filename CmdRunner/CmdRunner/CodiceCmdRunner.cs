@@ -396,13 +396,16 @@ namespace Codice.CmdRunner
 
         protected bool USE_FILE_COMMUNICATION = true; // communicate with cm shell using a file
 
-        private const int DEFAULT_SPIN_TIME = 10 * 1000;
-        private const int DEFAULT_MAX_WAIT_TIME = 8 * 60 * 1000;
-        private const int DEFAULT_MAX_WAIT_TIME_ALL = 30 * 60 * 1000;
+        private const int DEFAULT_SPIN_TIME = 10 * SECOND;
+        private const int DEFAULT_MAX_WAIT_TIME = 8 * MINUTE;
+        private const int DEFAULT_MAX_WAIT_TIME_ALL = 30 * MINUTE;
 
         private int mSpinTime = -1;
         private int mMaxWaitTime = -1;
         private int mMaxWaitTimeAll = -1;
+
+        const int SECOND = 1000;
+        const int MINUTE = 60 * SECOND;
 
         private bool mbTimeOut = true;
 
