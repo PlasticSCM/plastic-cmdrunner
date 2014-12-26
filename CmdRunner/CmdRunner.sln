@@ -13,9 +13,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmdRunnerExample", "CmdRunn
 		SccProvider = Plastic SCM
 	EndGlobalSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sampleplasticapi", "..\samples\sampleplasticapi\sampleplasticapi.csproj", "{C0CBCFD1-7EEA-4113-8C0B-DFC7F2D97566}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples", "..\samples\Samples.csproj", "{96343C99-F395-4C80-8E8D-AB03D96767FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sampleplasticapi", "..\sampleplasticapi\sampleplasticapi.csproj", "{C0CBCFD1-7EEA-4113-8C0B-DFC7F2D97566}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
