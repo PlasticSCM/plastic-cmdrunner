@@ -41,7 +41,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\CmdRunner\CmdRunner\CmdRunner.csproj">
+    <ProjectReference Include="..\CmdRunner\CmdRunner\CmdRunner.csproj">
       <Project>{78B48E02-E448-4C11-8E5F-28B20ECA2B04}</Project>
       <Name>CmdRunner</Name>
     </ProjectReference>

@@ -31,3 +31,5 @@ The code consists of:
 * sampleplasticapi: A sample API for PlasticSCM built using CmdRunner. Many of the basic operations (add,
   check-in, delete, etc.) are implemented. Also, a sample program to demonstrate the API usage is shipped
   along with the actual API code.
+
+* Samples: This project contains the source of all examples displayed in our CmdRunner Guide.
