@@ -100,7 +100,7 @@ namespace Codice.CmdRunner
             p.StartInfo.FileName = args[0];
             p.StartInfo.WorkingDirectory = workingdir;
             p.StartInfo.Arguments = EscapeArgs(cmd.Substring(args[0].Length));
-            p.StartInfo.CreateNoWindow = false;
+            p.StartInfo.CreateNoWindow = true;
             p.StartInfo.RedirectStandardOutput = bRedirectStreams;
             p.StartInfo.RedirectStandardInput = bRedirectStreams;
             p.StartInfo.RedirectStandardError = bRedirectStreams;
