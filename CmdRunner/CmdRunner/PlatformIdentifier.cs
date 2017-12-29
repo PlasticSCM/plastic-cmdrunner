@@ -48,12 +48,19 @@ namespace Codice.CmdRunner
                         if ((p == 4) || (p == 128))
                         {
                             int major = Environment.OSVersion.Version.Major;
-
-                            // Darwin tiger is 8, darwin leopard is 9,
-                            // darwin snow leopard is 10
+                            //17.x.x  OS X 10.13.x High Sierra
+                            //16.x.x  OS X 10.12.x Sierra
+                            //15.x.x  OS X 10.11.x El Capitan
+                            //14.x.x  OS X 10.10.x Yosemite
+                            //13.x.x  OS X 10.9.x Mavericks
+                            //12.x.x  OS X 10.8.x Mountain Lion
+                            //11.x.x  OS X 10.7.x Lion
+                            //10.x.x  OS X 10.6.x Snow Leopard
+                            //9.x.x  OS X 10.5.x Leopard
+                            //8.x.x  OS X 10.4.x Tiger
                             // This is not very nice, as it may conflict
-                            // on other OS like Solaris or AIX.
-                            bIsMac = (major == 8 || major == 9 || major == 10);
+                            // on other OS like solaris or aix.
+                            bIsMac = (8 <= major && major <= 17);
                         }
                     }
                 }
